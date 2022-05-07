@@ -1,7 +1,8 @@
 const bodyParser = require("body-parser"); // With Express 4.16+ you do not need this and can use express.json() and express.raw() instead
 const unless = require('express-unless');
 const express = require('express');
-const functions = require("firebase-functions");
+const { EventWebhook } = require("@sendgrid/eventwebhook");
+// const functions = require("firebase-functions");
 const app = express();
 
 class EventWebhookHeader {
@@ -15,7 +16,6 @@ class EventWebhookHeader {
 };
 
 
-const { EventWebhook } = require("@sendgrid/eventwebhook");
 
 const verifyRequest = function (publicKey, payload, signature, timestamp) {
   const eventWebhook = new EventWebhook();
@@ -35,11 +35,13 @@ app.post("/sendgrid/webhook",
   bodyParser.raw({ type: 'application/json' }),
   async (req, resp) => {
     try {
-      const key = 'MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEIJxT03TLpfkhG5x19A581RjSs4w3ffCA2RTHN4YLAxx3TUEKCpfFZI4nhuFCEv6YHS0q7/VSe4EMef/39avjTQ==';
+      const key = 'MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAE6hdTKc/oNoWiQMj2kxaBu/HCI27/hKurVpmYcOR2dfXoi7piUHuUf04EJT6Iu/nf6MZwZOexSiTAgvN+iiR56Q==';
       // Alternatively, you can get your key from your firebase function cloud config
       // const key = getConfig().sendgrid.webhook_verification_key;
       const signature = req.get(EventWebhookHeader.SIGNATURE());
       const timestamp = req.get(EventWebhookHeader.TIMESTAMP());
+
+      // const bodyPayload = req.rawBody.toString();
 
       // Be sure to _not_ remove any leading/trailing whitespace characters (e.g., '\r\n').
       const requestBody = req.body;
@@ -49,6 +51,7 @@ app.post("/sendgrid/webhook",
       console.log(requestBody);
       console.log(req.headers);
       console.log(timestamp);
+
 
       if (verifyRequest(key, requestBody, signature, timestamp)) {
         resp.sendStatus(204);
